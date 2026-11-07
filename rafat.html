@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rafat Website - Secure Access</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 { margin-bottom: 10px; color: #38bdf8; }
+        p { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
+        .btn {
+            background-color: #22c55e;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .btn:hover { background-color: #16a34a; }
+        #main-content { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Lock Gate (Jab tak user key verify na kare) -->
+    <div class="card" id="lock-screen">
+        <h2>🔒 Website Locked</h2>
+        <p>Website access karne ke liye pehle key generate karein. Ek baar key verify karne par yeh 24 ghante tak unlock rahegi.</p>
+        <!-- YAHAN APNA ADROLINKS KA SHORT LINK DALEN -->
+        <a href="https://arolinks.com/rafathub" class="btn" onclick="setRedirectToken()">Generate Key</a>
+    </div>
+
+    <!-- Aapka Asli Website Content (Jab unlock ho jayega tab dikhega) -->
+    <div id="main-content" style="text-align: center;">
+        <h1 style="color: #38bdf8;">Welcome to Rafat's Website! 🎉</h1>
+        <p>Aapka 24-hour session active hai. Enjoy your content!</p>
+        <!-- Yahan aap apna baaki ka website content daal sakte hain -->
+    </div>
+
+    <script>
+        // 1. Check karein ki URL me ?key=verified aaya hai ya nahi jab user wapas aaye
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('key') === 'verified') {
+            // 24 ghante ka expiry time set karein (Current Time + 24 Hours in milliseconds)
+            const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+            localStorage.setItem('session_expiry', expiryTime);
+            
+            // URL clean karne ke liye '?key=verified' hata dein taaki URL saaf rahe
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // 2. Check karein ki session active hai ya nahi
+        function checkSession() {
+            const expiryTime = localStorage.getItem('session_expiry');
+            const now = new Date().getTime();
+
+            if (expiryTime && now < expiryTime) {
+                // Session zinda hai: Lock screen chhupao, main content dikhao
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                // Session khatam ya nahi hai: Lock screen dikhao
+                document.getElementById('lock-screen').style.display = 'block';
+                document.getElementById('main-content').style.display = 'none';
+            }
+        }
+
+        function setRedirectToken() {
+            // Yeh optional state track karne ke liye hai agar zaroorat ho
+            localStorage.setItem('waiting_for_verification', 'true');
+        }
+
+        // Page load hote hi session check karo
+        checkSession();
+    </script>
+
+</body>
+</html>
