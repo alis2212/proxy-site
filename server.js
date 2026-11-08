@@ -1,34 +1,25 @@
 const express = require('express');
-const axios = require('axios');
-const cheerio = require('cheerio');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const TARGET_URL = 'https://stream.aryavidya.cc/';
+// Target website
+const TARGET_URL = 'https://stream.aryavidya.cc';
 
-app.get('/', async (req, res) => {
-    try {
-        // Cloudflare bypass karne ke liye public proxy service ka use kar rahe hain
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(TARGET_URL)}`;
-        const response = await axios.get(proxyUrl);
-        
-        // AllOrigins response data ko parse karte hain
-        let html = response.data.contents;
-        const $ = cheerio.load(html);
-
-        // --- Yahan aap apne hisab se CSS ya changes daal sakte hain ---
-        $('body').append(`
-            <style>
-                body { background-color: #0f172a !important; color: #fff !important; }
-            </style>
-        `);
-
-        res.send($.html());
-    } catch (error) {
-        res.status(500).send("Error loading website content: " + error.message);
+// Proxy middleware jo saare requests ko target site par bhej dega (Cloudflare ko bypass karte hue)
+app.use('/', createProxyMiddleware({
+    target: TARGET_URL,
+    changeOrigin: true,
+    secure: false,
+    onProxyRes: function (proxyRes, req, res) {
+        // Security headers ko relax karna taaki content block na ho
+        proxyRes.headers['access-control-allow-origin'] = '*';
+    },
+    onError: (err, req, res) => {
+        res.status(500).send('Proxy Error: ' + err.message);
     }
-});
+}));
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Proxy server running on port ${PORT}`);
 });
