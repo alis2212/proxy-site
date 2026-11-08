@@ -3,29 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Web Page</title>
+    <title>Ansu - Secure Access</title>
     <style>
-        /* Page ko clean rakhne ke liye margins aur padding 0 kar rahe hain */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
         }
 
-        /* Iframe ko full screen adjust karne ke liye */
-        .content-frame {
+        /* Lock Screen Styling */
+        #lock-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: rgba(15, 23, 42, 0.98);
+            z-index: 9999;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h2 { margin-bottom: 10px; color: #38bdf8; }
+        p { color: #94a3b8; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
+        
+        .btn {
+            background-color: #22c55e;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .btn:hover { background-color: #16a34a; }
+
+        /* Main Website Content */
+        #main-content {
+            display: none;
             width: 100%;
             height: 100vh;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
             border: none;
         }
     </style>
 </head>
 <body>
 
-    <!-- Yahan 'src' me apne dost ki website ka link daal dein -->
-    <iframe src="https://stream.aryavidya.cc/" class="content-frame" title="Embedded Content"></iframe>
+    <!-- Lock Screen (Jab tak 24 hour ka session na ho) -->
+    <div id="lock-screen">
+        <div class="card">
+            <h2>🔒 Website Locked</h2>
+            <p>Is page ko access karne ke liye niche button par click karke key generate karein. Ek baar unlock hone par 24 ghante tak dobara zaroorat nahi padegi.</p>
+            
+            <!-- YAHAN APNA ADROLINKS KA SHORT LINK PASTE KAREIN -->
+            <a href="https://adrolinks.com/YOUR_SHORT_LINK_HERE" class="btn" target="_blank">Generate Key / Open</a>
+        </div>
+    </div>
+
+    <!-- Asli Website jo 24 hours tak dikhegi -->
+    <div id="main-content">
+        <iframe src="https://stream.aryavidya.cc/" title="Protected Content"></iframe>
+    </div>
+
+    <script>
+        // 1. Check karein ki user ad cross karke ?key=verified ke sath wapas aaya hai ya nahi
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('key') === 'verified') {
+            // 24 ghante ka expiry time set karein (Current Time + 24 hours in milliseconds)
+            const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+            localStorage.setItem('ansu_session_expiry', expiryTime);
+            
+            // URL se ?key=verified hata kar clean kar dein
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // 2. Session check karne ka function
+        function checkSession() {
+            const expiryTime = localStorage.getItem('ansu_session_expiry');
+            const now = new Date().getTime();
+
+            if (expiryTime && now < expiryTime) {
+                // Session active hai -> Lock screen hatao, main content dikhao
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                // Session expire ho gaya ya pehli baar aaya hai -> Lock screen dikhao
+                document.getElementById('lock-screen').style.display = 'flex';
+                document.getElementById('main-content').style.display = 'none';
+            }
+        }
+
+        // Page load hote hi check karo
+        checkSession();
+    </script>
 
 </body>
 </html>
