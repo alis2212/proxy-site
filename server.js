@@ -4,33 +4,29 @@ const cheerio = require('cheerio');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Target website jise aap load karna chahte hain
 const TARGET_URL = 'https://stream.aryavidya.cc/';
 
 app.get('/', async (req, res) => {
     try {
-        // 1. Us website ka HTML data fetch karo
-        const response = await axios.get(TARGET_URL);
-        let html = response.data;
+        // Browser jaisa User-Agent header bhej rahe hain taaki 403 Forbidden error na aaye
+        const response = await axios.get(TARGET_URL, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5'
+            }
+        });
 
-        // 2. Cheerio library se HTML ke andar changes karo
+        let html = response.data;
         const $ = cheerio.load(html);
 
-        // --- YAHAN AAP APNE HISAB SE CHANGES KAR SAKTE HAIN ---
-        // Jaise agar koi heading badalni hai ya koi box/element hatana hai:
-        
-        // Example 1: Kisi element ko gayab (remove) karna ho:
-        // $('#unwanted-box-id').remove();
-
-        // Example 2: Background color ya style badalna ho:
+        // --- Yahan aap apne hisab se CSS ya changes daal sakte hain ---
         $('body').append(`
             <style>
-                /* Yahan apni marzi ki CSS daal sakte hain jo us website par lag jayegi */
                 body { background-color: #0f172a !important; color: #fff !important; }
             </style>
         `);
 
-        // 3. Modified HTML user ko dikhao
         res.send($.html());
     } catch (error) {
         res.status(500).send("Error loading website content: " + error.message);
